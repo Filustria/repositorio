@@ -1,0 +1,25 @@
+# New dataset
+
+
+
+```{r, include=FALSE}
+library(tidyverse)
+library(kableExtra)
+
+load("C:\\Users\\Adelson\\Desktop\\pendrive\\bancos_workspace\\novo.RData")
+
+glimpse(novo)
+```
+
+
+# Patients subscribed in each clinic
+
+```{r}
+
+clinicas <- novo %>% group_by(NOME_UNIDADE) %>% count() 
+
+kableExtra::kable(clinicas) %>% kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+
+
