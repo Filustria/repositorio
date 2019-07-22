@@ -167,7 +167,7 @@ base$NOME_PROF[base$NOME_PROF == 'LUCAS GALHADO DE ARAUJO'] <- 'LUCAS GALHARDO D
 base$NOME_PROF[base$NOME_PROF == 'PEDRO DE GALES PERPETUO ROCHA PITTA'] <- 'PEDRO DE GALES PERPETUO ROCHA PITTA SAMPAIO'
 base$NOME_PROF[base$NOME_PROF == 'ANDRE LUIZ  DO AMARAL LIRA'] <- 'ANDRE LUIZ DO AMARAL LIRA'
 
-# Data da primeira consulta em cada clínica
+# Data da primeira consulta em cada cl?nica
 minimo <- base %>% group_by(NOME_UNIDADE) %>% summarise(primeira_consulta_na_clinica = min(DATA_CONSULTA))
 
 minimo$primeira_consulta_na_clinica <- as.Date(minimo$primeira_consulta_na_clinica)
@@ -198,7 +198,7 @@ base$NOME_UNIDADE[base$NOME_UNIDADE == "SMS CF DINIZ BATISTA DOS SANTOS - AP 31"
                      base$DATA_CONSULTA < "2018-03-02"] <- "SMS CF JEREMIAS MORAES DA SILVA - AP 31"
 
 
-# Diniz recebeu os pacientes do parque união e algumas equipes do Hélio smidt
+# Diniz recebeu os pacientes do parque uni?o e algumas equipes do H?lio smidt
 # SMS CF WILMA COSTA - AP 31 - "2016-09-30"
 # Jeremias pegou as equipes do Samora Machel e Nova Holanda
 
@@ -246,8 +246,8 @@ Still need to create the categorical variable for Medical Specialty, adding info
 consultas <- merge(consultas, mfcs, by = c("NOME_PROF"), all.x = TRUE) # retirar o nome da unidade.
 
 consultas$MFCcat <- ifelse(consultas$TIPO_ATENDIMENTO == "Consulta de Enfermagem", "Nurse",
-                           ifelse(consultas$TIPO_ATENDIMENTO == "Consulta de Saúde Bucal", "Dentist",
-                                  ifelse(consultas$TIPO_ATENDIMENTO == "Consulta Médica" & consultas$MFC == 1, 
+                           ifelse(consultas$TIPO_ATENDIMENTO == "Consulta de Sa?de Bucal", "Dentist",
+                                  ifelse(consultas$TIPO_ATENDIMENTO == "Consulta M?dica" & consultas$MFC == 1, 
                                          "FP", "Generalist")))
 
 
@@ -277,7 +277,7 @@ The whole dataset is called "consultas" and can be subsetted by using the variab
 
 ```{r}
 
-consultas <- consultas %>% filter(TIPO_ATENDIMENTO == "Consulta Médica")
+consultas <- consultas %>% filter(TIPO_ATENDIMENTO == "Consulta M?dica")
 
 
 ```
@@ -611,43 +611,43 @@ consultas$fa_valor <- consultas$fa*2.01
 consultas$epf_valor <- consultas$epf*1.65
 
 
-# Prescrição de triciclicos
+# Prescri??o de triciclicos
 tric <- c('TRIPTILINA')
 consultas$triciclico <- as.integer(ifelse(grepl(paste(tric, collapse = "|"), consultas$medicamento), consultas$DATA_NUM, NA))
 
-# Prescrição de Omeprazol
+# Prescri??o de Omeprazol
 omeprazol <- c('OMEPRAZOL')
 consultas$omeprazol <- as.integer(ifelse(grepl(paste(omeprazol, collapse = "|"), consultas$medicamento), consultas$DATA_NUM, NA))
 
-# Prescrição de benzodiazepínicos
+# Prescri??o de benzodiazep?nicos
 diazepam <- c('AZEPAM', "AZEPAN")
 consultas$diazepam <- as.integer(ifelse(grepl(paste(diazepam, collapse = "|"), consultas$medicamento), consultas$DATA_NUM, NA))
 
-# Prescrição de Estatinas
+# Prescri??o de Estatinas
 estatina <- c('STATINA')
 consultas$estatina <- as.integer(ifelse(grepl(paste(estatina, collapse = "|"), consultas$medicamento), consultas$DATA_NUM, NA))
 
-# Prescrição de Amoxicilina
+# Prescri??o de Amoxicilina
 amox <- c('AMOXIC')
 consultas$amox <- as.integer(ifelse(grepl(paste(amox, collapse = "|"), consultas$medicamento), consultas$DATA_NUM, NA))
 
-# Prescrição de AAS 100 mg
+# Prescri??o de AAS 100 mg
 aas <- c('ACIDO ACETILSALICILICO 100MG')
 consultas$aas <- as.integer(ifelse(grepl(paste(aas, collapse = "|"), consultas$medicamento), consultas$DATA_NUM, NA))
 
-# Prescrição de Penicilina
+# Prescri??o de Penicilina
 pen <- c('PENICILINA')
 consultas$pen <- as.integer(ifelse(grepl(paste(pen, collapse = "|"), consultas$medicamento), consultas$DATA_NUM, NA))
 
-# Prescrição de AZITROMICINA
+# Prescri??o de AZITROMICINA
 azi <- c('AZITROMICINA')
 consultas$azi <- as.integer(ifelse(grepl(paste(azi, collapse = "|"), consultas$medicamento), consultas$DATA_NUM, NA))
 
-# Prescrição de CEFALEXINA
+# Prescri??o de CEFALEXINA
 cef <- c('CEFALEXINA')
 consultas$cef <- as.integer(ifelse(grepl(paste(cef, collapse = "|"), consultas$medicamento), consultas$DATA_NUM, NA))
 
-# Prescrição de Quinolonas
+# Prescri??o de Quinolonas
 quino <- c('FLOXACIN')
 consultas$quino <- as.integer(ifelse(grepl(paste(quino, collapse = "|"), consultas$medicamento), consultas$DATA_NUM, NA))
 
@@ -787,7 +787,7 @@ cadastrados$NOME_MAE[cadastrados$NOME_PAC == "ACIR DE FREITAS MARTINS"] <- "NILF
 cadastrados$DATA_NASC[cadastrados$NOME_PAC == "ACIR DE FREITAS MARTINS"] <- as.Date("1946-07-04")
 cadastrados$NOME_PAC[cadastrados$NOME_PAC == "ACSA RANGEL DA SILVA"] <- "ACSA RANGEL ARAUJO DA SILVA"
 cadastrados$NOME_MAE[cadastrados$NOME_PAC == "ACUCENA CRISTINA GOMES COUTINHO"] <- "CRISTIANE DOS SANTOS GOMES COUTINHO"
-cadastrados$NOME_PAC[cadastrados$NOME_PAC == "AÇUCENA KELLY SILVA"] <- "ACUCENA KELY SILVA SERRA"
+cadastrados$NOME_PAC[cadastrados$NOME_PAC == "A?UCENA KELLY SILVA"] <- "ACUCENA KELY SILVA SERRA"
 cadastrados$NOME_MAE[cadastrados$NOME_PAC == "ACUCENA KELY SILVA SERRA"] <- "KELI REGINA SILVA SERRA"
 cadastrados$DATA_NASC[cadastrados$NOME_PAC == "ACUCENA KELY SILVA SERRA"] <- as.Date("1997-12-27")
 cadastrados$NOME_PAC[cadastrados$NOME_PAC == "ACY MARVILLA"] <- "ACY MARVILHA"
@@ -950,7 +950,7 @@ save(cluster_ID,
 
 consult <- consultas[,c(1:74)]
 
-consult <- consult %>% filter(TIPO_ATENDIMENTO == "Consulta Médica")
+consult <- consult %>% filter(TIPO_ATENDIMENTO == "Consulta MÃ©dica")
 
 
 consult <- merge(consult, cluster_ID, by = "PACIENTE_ID", all.x = TRUE)
@@ -975,7 +975,7 @@ dobrados <- qual %>% group_by(cluster_ID) %>% filter(n() > 1) # 77.192 pacientes
 # The variable 'ultima' will mark the Date of the last appointment the patient had.
 
 
-## Data da última consulta
+## Data da ?ltima consulta
 consult <- consult %>%
   group_by(cluster_ID) %>%
   mutate(primeira_consulta = if(all(is.na(DATA_CONSULTA))) NA else min(DATA_CONSULTA, na.rm = TRUE),
@@ -1013,7 +1013,7 @@ wide$FPpercent <- wide$FP*100/wide$total_medicas
 
 
 
-doencas <- consult[,c(75:77, 16, 25:74)] # aqui precisa pegar a variável "cluster_ID"
+doencas <- consult[,c(75:77, 16, 25:74)] # aqui precisa pegar a vari?vel "cluster_ID"
 
   
 # Corrigir isso aqui
@@ -1034,7 +1034,7 @@ pacientes <- merge(wide, doenca, by = "cluster_ID")
 ```
 
 
-# Aqui precisa fazer com que todas as datas estejam presentes para determinar quando o paciente começa a contar o tempo e quando deixa de contar.
+# Aqui precisa fazer com que todas as datas estejam presentes para determinar quando o paciente come?a a contar o tempo e quando deixa de contar.
 
 continuar aqui 
 
@@ -1105,7 +1105,7 @@ teste <- teste %>%
 
 # cadastros %>% group_by(cluster_ID) %>% summarise(consulta)
 
-# 886.356 pacientes com ao menos uma informação de data
+# 886.356 pacientes com ao menos uma informa??o de data
 cadastros <- cadastros %>% 
   filter(!is.na(primeira_consulta) | !is.na(ultima_consulta))
 

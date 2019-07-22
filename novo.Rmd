@@ -427,6 +427,7 @@ consultas$fluconazol <- as.integer(ifelse(grepl(paste(fluconazol, collapse = "|"
 dipirona <- c('DIPIRONA')
 consultas$dipirona <- as.integer(ifelse(grepl(paste(dipirona, collapse = "|"), consultas$medicamento), consultas$DATA_NUM, NA))
 
+save(consultas, file = "C:\\Users\\Adelson\\Desktop\\pendrive\\bancos_workspace\\consultas_novo.RData")
 
 ```
 

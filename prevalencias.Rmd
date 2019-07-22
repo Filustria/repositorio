@@ -6,9 +6,11 @@
 library(tidyverse)
 library(kableExtra)
 
-load("C:\\Users\\Adelson\\Desktop\\pendrive\\bancos_workspace\\novo.RData")
+load("C:\\Users\\Adelson\\Desktop\\pendrive\\bancos_workspace\\consultas_novo.RData")
 
+novo <- consultas %>% filter(match != "so_velho")
 glimpse(novo)
+
 ```
 
 
@@ -22,4 +24,21 @@ kableExtra::kable(clinicas) %>% kable_styling(bootstrap_options = c("striped", "
 
 ```
 
+
+
+```{r}
+
+## First and last consultation
+
+novo <- novo %>%
+  group_by(PACIENTE_ID_novo) %>%
+  mutate(primeira_consulta = if(all(is.na(DATA_CONSULTA))) NA else min(DATA_CONSULTA, na.rm = TRUE),
+         ultima_consulta = if(all(is.na(DATA_CONSULTA))) NA else max(DATA_CONSULTA, na.rm = TRUE))
+
+
+novo$Category <- as.character(novo$Category)
+novo$Category[is.na(novo$Category)] <- c("No consultation")
+novo$Category <- as.factor(novo$Category)
+summary(novo$Category)
+```
 
