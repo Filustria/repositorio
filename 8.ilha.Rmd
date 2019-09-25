@@ -1,0 +1,430 @@
+# ILHA dataset
+
+Aqui começamos a unir os bancos do SISREG com os bancos do PRIME. Somente as clínicas da Ilha neste momento. 
+
+
+SMS CMS NECKER PINTO
+SMS CF ASSIS VALENTE
+SMS CF MARIA SEBASTIANA DE OLIVEIRA
+SMS CF WILMA COSTA
+SMS CMS MADRE TERESA DE CALCUTA
+SMS CMS NEWTON ALVES CARDOZO
+
+
+Notar que os CMS possuem também encaminhamentos provenientes dos clínicos, ginecos e pediatras e de outras especialidades. São encaminhamentos de pacientes que não estão cadastrados nas ESF. Portanto, não haverá match.
+
+
+```{r}
+
+library(tidyverse)
+
+
+
+## Usar este aqui para os matchs com o SISREG, pois contém também os fora de área.
+load("C:\\Users\\Adelson\\Desktop\\pendrive\\roteiros\\novo_prime\\cadastrados_final.RData")
+
+cadastrados$NOME_PAC <- as.character(cadastrados$NOME_PAC)
+cadastrados$NOME_UNIDADE <- stringr::str_sub(cadastrados$NOME_UNIDADE, 1,
+                                             str_length(cadastrados$NOME_UNIDADE)-8)
+
+cadastrados$NOME_PAC <- sapply(strsplit(cadastrados$NOME_PAC, split = "NAO MORA", 
+                                          fixed=FALSE), function(x) (x[1]))
+cadastrados$NOME_PAC <- sapply(strsplit(cadastrados$NOME_PAC, split = "FORA DE AREA", 
+                                          fixed=FALSE), function(x) (x[1]))
+cadastrados$NOME_PAC <- sapply(strsplit(cadastrados$NOME_PAC, split = "FORA DA AREA", 
+                                          fixed=FALSE), function(x) (x[1]))
+cadastrados$NOME_PAC <- sapply(strsplit(cadastrados$NOME_PAC, split = "AREA", 
+                                          fixed=FALSE), function(x) (x[1]))
+cadastrados$NOME_PAC <- sapply(strsplit(cadastrados$NOME_PAC, split = "MORA FORA", 
+                                          fixed=FALSE), function(x) (x[1]))
+cadastrados$NOME_PAC <- sapply(strsplit(cadastrados$NOME_PAC, split = "FORA TERRITORIO", 
+                                          fixed=FALSE), function(x) (x[1]))
+cadastrados$NOME_PAC <- sapply(strsplit(cadastrados$NOME_PAC, split = "FORA DO TERRITORIO", 
+                                          fixed=FALSE), function(x) (x[1]))
+cadastrados$NOME_PAC <- sapply(strsplit(cadastrados$NOME_PAC, split = "FORA DE TERRITORIO", 
+                                          fixed=FALSE), function(x) (x[1]))
+cadastrados$NOME_PAC <- sapply(strsplit(cadastrados$NOME_PAC, split = "FORA DA AREA", 
+                                          fixed=FALSE), function(x) (x[1]))
+cadastrados$NOME_PAC <- sapply(strsplit(cadastrados$NOME_PAC, split = "MUDANCA DE TERRITORIO", 
+                                          fixed=FALSE), function(x) (x[1]))
+cadastrados$NOME_PAC <- sapply(strsplit(cadastrados$NOME_PAC, split = "MUDOU DE TERRITORIO", 
+                                          fixed=FALSE), function(x) (x[1]))
+cadastrados$NOME_PAC <- gsub("OLX ", "", cadastrados$NOME_PAC)
+cadastrados$NOME_PAC <- gsub(" OLX", "", cadastrados$NOME_PAC)
+cadastrados$NOME_PAC <- gsub(" FORA DE AREA", "", cadastrados$NOME_PAC)
+cadastrados$NOME_PAC <- gsub("FORA DE AREA ", "", cadastrados$NOME_PAC)
+cadastrados$NOME_PAC <- gsub("Mª", "MARIA", cadastrados$NOME_PAC)
+
+ 
+
+cadastrados <- cadastrados %>% 
+  filter(NOME_UNIDADE == "SMS CMS NECKER PINTO" |
+            NOME_UNIDADE == "SMS CF ASSIS VALENTE" | 
+           NOME_UNIDADE == "SMS CF MARIA SEBASTIANA DE OLIVEIRA" | 
+           NOME_UNIDADE == "SMS CF WILMA COSTA" | 
+           NOME_UNIDADE == "SMS CMS MADRE TERESA DE CALCUTA" | 
+           NOME_UNIDADE == "SMS CMS NEWTON ALVES CARDOZO") %>%
+  select(PACIENTE_ID, NOME_PAC, DATA_NASC, NOME_MAE, NOME_UNIDADE, ESF, cluster_cadastros) %>%
+  arrange(NOME_PAC)
+
+
+
+# 169.648 contando com todas as equipes e todos os foras de área
+
+
+
+load("C:\\Users\\Adelson\\Desktop\\pendrive\\DATABASES\\sisreg\\amostra_sisreg_31.Rmd")
+
+amostra$DATA_SOLICITACAO <- as.Date(amostra$data_solicitacao)
+amostra$DATA_NASC <- as.Date(amostra$dt_nascimento_usuario) - 1
+amostra$NOME_PAC <- as.character(amostra$no_usuario)
+amostra$NOME_UNIDADE <- as.character(amostra$nome_unidade_solicitante)
+amostra$NOME_MAE <- as.character(amostra$no_mae_usuario)
+amostra$cid10 <- as.character(amostra$codigo_cid_agendado)
+amostra$OPERADOR_SOLICITANTE <- as.character(amostra$nome_operador_solicitante)
+amostra$MEDICO_SOLICITANTE <- as.character(amostra$nome_medico_solicitante)
+amostra$CRM <- as.numeric(amostra$numero_crm)
+amostra$PROCEDIMENTO <- as.character(amostra$nome_procedimento)
+amostra$NOME_UNIDADE <- stringr::str_sub(amostra$NOME_UNIDADE, 1,
+                                         str_length(amostra$NOME_UNIDADE)-6)
+amostra$NOME_PAC <- gdata::trim(amostra$NOME_PAC)
+
+
+
+amostra <- amostra %>% 
+  select(codigo_solicitacao, NOME_PAC, DATA_NASC, NOME_MAE, NOME_UNIDADE, DATA_SOLICITACAO, 
+         cid10, MEDICO_SOLICITANTE, PROCEDIMENTO) %>%
+  rename(ID_SISREG = codigo_solicitacao)
+
+
+amostra <- amostra %>% 
+  filter(NOME_UNIDADE == "SMS CMS NECKER PINTO" |
+            NOME_UNIDADE == "SMS CF ASSIS VALENTE" | 
+           NOME_UNIDADE == "SMS CF MARIA SEBASTIANA DE OLIVEIRA" | 
+           NOME_UNIDADE == "SMS CF WILMA COSTA" | 
+           NOME_UNIDADE == "SMS CMS MADRE TERESA DE CALCUTA" | 
+           NOME_UNIDADE == "SMS CMS NEWTON ALVES CARDOZO")
+amostra <- amostra %>% 
+  filter(PROCEDIMENTO == "CONSULTA EM REUMATOLOGIA" | 
+           PROCEDIMENTO == "CONSULTA EM REUMATOLOGIA - GERAL" |
+           PROCEDIMENTO == "CONSULTA EM OFTALMOLOGIA - GERAL"|
+           PROCEDIMENTO == "CONSULTA EM DERMATOLOGIA"|
+           PROCEDIMENTO == "CONSULTA EM ORTOPEDIA"|
+           PROCEDIMENTO == "CONSULTA EM NUTRICAO"|
+           PROCEDIMENTO == "GRUPO - EXAMES ULTRA-SONOGRAFICOS" |
+           PROCEDIMENTO == "CONSULTA EM CARDIOLOGIA" |
+           PROCEDIMENTO == "CONSULTA EM OTORRINOLARINGOLOGIA" |
+           PROCEDIMENTO == "CONSULTA EM FISIOTERAPIA" |
+           PROCEDIMENTO == "CONSULTA EM ENDOCRINOLOGIA - DIABETES" |
+           PROCEDIMENTO == "ELETROCARDIOGRAMA" |
+           PROCEDIMENTO == "MAMOGRAFIA BILATERAL" |
+           PROCEDIMENTO == "MAMOGRAFIA BILATERAL PARA RASTREAMENTO" |
+           PROCEDIMENTO == "CONSULTA EM ORTOPEDIA - GERAL" |
+           PROCEDIMENTO == "CONSULTA EM INFECTOLOGIA - HIV/AIDS" |
+           PROCEDIMENTO == "CONSULTA EM UROLOGIA" |
+           PROCEDIMENTO == "CONSULTA EM GASTROENTEROLOGIA" |
+           PROCEDIMENTO == "CONSULTA EM OFTALMOLOGIA - CIRURGIA DE CATARATA" |
+           PROCEDIMENTO == "ENDOSCOPIA DIGESTIVA ALTA" |
+           PROCEDIMENTO == "GRUPO - MAMOGRAFIA" |
+           PROCEDIMENTO == "CONSULTA EM ANGIOLOGIA" |
+           PROCEDIMENTO == "GRUPO - PROCEDIMENTOS AMBULATORIAIS EM OFTALMOLOGIA" |
+           PROCEDIMENTO == "CONSULTA EM REUMATOLOGIA" |
+           PROCEDIMENTO == "CONSULTA EM PNEUMOLOGIA" |
+           PROCEDIMENTO == "CONSULTA EM FONOAUDIOLOGIA - INFANTIL" |
+           PROCEDIMENTO == "CONSULTA EM DERMATOLOGIA - PEQUENOS PROCEDIMENTOS" |
+           PROCEDIMENTO == "CONSULTA EM NEUROLOGIA" |
+           PROCEDIMENTO == "CONSULTA EM ODONTOLOGIA - ENDODONTIA" |
+           PROCEDIMENTO == "CONSULTA EM CIRURGIA PEDIATRICA" |
+           PROCEDIMENTO == "CONSULTA EM PSIQUIATRIA" |
+           PROCEDIMENTO == "CONSULTA EM ENDOCRINOLOGIA" |
+           PROCEDIMENTO == "CONSULTA EM ODONTOLOGIA - CIRURGIA ORAL MENOR" |
+           PROCEDIMENTO == "CONSULTA EM OTORRINOLARINGOLOGIA PEDIATRICA" |
+           PROCEDIMENTO == "CONSULTA EM OBSTETRICIA - ALTO RISCO GERAL" |
+           PROCEDIMENTO == "CONSULTA EM SAUDE MENTAL -ADULTO" |
+           PROCEDIMENTO == "GRUPO - TOMOGRAFIA COMPUTADORIZADA" |
+           PROCEDIMENTO == "CONSULTA EM OFTALMOLOGIA - PEDIATRIA" |
+           PROCEDIMENTO == "CONSULTA EM OTORRINOLARINGOLOGIA - GERAL" |
+           PROCEDIMENTO == "CONSULTA EM DERMATOLOGIA - PEDIATRIA" |
+           PROCEDIMENTO == "CONSULTA EM CIRURGIA PLASTICA - REPARADORA" |
+           PROCEDIMENTO == "CONSULTA EM ENDOCRINOLOGIA - TIREOIDE" |
+           PROCEDIMENTO == "CONSULTA EM CIRURGIA GERAL - GERAL" |
+           PROCEDIMENTO == "OFTALMOLOGIA - MAPEAMENTO DE RETINA" |
+           PROCEDIMENTO == "CONSULTA EM ANGIOLOGIA - GERAL" |
+           PROCEDIMENTO == "CONSULTA EM UROLOGIA - GERAL" |
+           PROCEDIMENTO == "ECOCARDIOGRAFIA TRANSTORACICA" |
+           PROCEDIMENTO == "ULTRA-SONOGRAFIA TRANSVAGINAL" |
+           PROCEDIMENTO == "EMISSOES OTOACUSTICAS EVOCADAS P/ TRIAGEM AUDITIVA (TESTE DA ORELHINHA)" |
+           PROCEDIMENTO == "CONSULTA EM NEUROLOGIA - PEDIATRIA" |
+           PROCEDIMENTO == "CONSULTA EM OFTALMOLOGIA - GLAUCOMA" |
+           PROCEDIMENTO == "CONSULTA EM CARDIOLOGIA - GERAL" |
+           PROCEDIMENTO == "TESTE DE ESFORCO OU TESTE ERGOMETRICO 2" |
+           PROCEDIMENTO == "COLONOSCOPIA") %>%
+  arrange(NOME_PAC)
+
+amostra <- amostra %>% 
+  filter(DATA_SOLICITACAO > "2013-04-01")
+
+## 91.307 encaminhamentos
+
+
+
+################################################################ 
+
+#################    Unindo usando o merge    ##################
+
+################################################################
+# teste feito a partir do nome do paciente
+
+cadsesisreg <- merge(amostra, cadastrados, by = c('NOME_PAC', 'NOME_UNIDADE'), all = TRUE)
+
+cadsesisreg$nascimentos <- as.factor(ifelse(as.character(cadsesisreg$DATA_NASC.x) == 
+                                   as.character(cadsesisreg$DATA_NASC.y), 1, 0))
+
+cadsesisreg$maes <- as.factor(ifelse(as.character(cadsesisreg$NOME_MAE.x) == 
+                                    as.character(cadsesisreg$NOME_MAE.y), 1, 0))
+
+cadsesisreg$match <- as.factor(ifelse(cadsesisreg$nascimentos == 1 & cadsesisreg$maes == 1, 'match', 
+                               ifelse(cadsesisreg$nascimentos == 1 & cadsesisreg$maes == 0, 'nascimento achado', 
+                                      ifelse(cadsesisreg$nascimentos == 0 & cadsesisreg$maes == 1, 'mae achada', 
+                                             ifelse(cadsesisreg$nascimentos == 0 & cadsesisreg$maes == 0, 'apenas nome', NA)))))
+
+
+cadsesisreg$perdido <- as.factor(ifelse(!is.na(cadsesisreg$ID_SISREG) & !is.na(cadsesisreg$PACIENTE_ID), "match",
+                                        ifelse(is.na(cadsesisreg$ID_SISREG) & !is.na(cadsesisreg$PACIENTE_ID), 
+                                               "nunca encaminhado", "nao encontrado")))
+
+
+cadsesisreg <- cadsesisreg %>% 
+  select(ID_SISREG, PACIENTE_ID, cluster_cadastros, perdido, match, NOME_PAC, NOME_UNIDADE, 
+         DATA_NASC.x, DATA_NASC.y, NOME_MAE.x, NOME_MAE.y, DATA_SOLICITACAO,  
+         cid10, MEDICO_SOLICITANTE, PROCEDIMENTO, cluster_cadastros, ESF) %>%
+  distinct()
+
+summary(cadsesisreg$match)
+summary(cadsesisreg$perdido)
+
+# save(cadsesisreg, file = "C:\\Users\\Adelson\\Desktop\\pendrive\\DATABASES\\sisreg\\cadsesisreg.RData")
+# load("C:\\Users\\Adelson\\Desktop\\pendrive\\DATABASES\\sisreg\\cadsesisreg.RData")
+```
+
+
+
+```{r}
+
+cadsesisreg <- within(cadsesisreg, cluster_SISREG <- match(ID_SISREG, unique(ID_SISREG, na.rm=T)) - 1)
+
+cadsesisreg$cluster_SISREG[cadsesisreg$cluster_SISREG == 0] <- NA
+
+cadsesisreg <- cadsesisreg %>% 
+  group_by(cluster_SISREG) %>% 
+  mutate(SISREG_duplicado = ifelse(is.na(cluster_SISREG), "virgem",
+                                     ifelse(n() > 1, "duplicado", "simples"))) %>% 
+  mutate(lixo = ifelse(SISREG_duplicado == "duplicado" & ESF == "fora de area", "lixo", "bom")) %>%
+  select(lixo, cluster_SISREG, SISREG_duplicado, ID_SISREG, PACIENTE_ID, cluster_cadastros, perdido, match, NOME_PAC, 
+  NOME_UNIDADE, DATA_NASC.x, DATA_NASC.y, NOME_MAE.x, NOME_MAE.y, DATA_SOLICITACAO, cid10, 
+  MEDICO_SOLICITANTE, PROCEDIMENTO, ESF) 
+
+summary(as.factor(cadsesisreg$lixo)) # 4035 duplicados lixo, que não tem área
+summary(as.factor(cadsesisreg$SISREG_duplicado)) # 8514 duplicados
+
+cadsesisreg <- cadsesisreg %>%
+  filter(lixo == "bom") %>%
+  arrange(NOME_PAC)
+
+# 4035 retirados como lixo, pois era duplicados e fora de área.
+
+cadsesisreg <- within(cadsesisreg, cluster_SISREG2 <- match(ID_SISREG, unique(ID_SISREG, na.rm=T)) - 1)
+
+cadsesisreg$cluster_SISREG2[cadsesisreg$cluster_SISREG2 == 0] <- NA
+
+cadsesisreg <- cadsesisreg %>% 
+  group_by(cluster_SISREG2) %>% 
+  mutate(SISREG_duplicado2 = ifelse(is.na(cluster_SISREG2), "virgem",
+                                     ifelse(n() > 1, "duplicado", "simples"))) %>% 
+  mutate(lixo = ifelse(SISREG_duplicado2 == "duplicado" & ESF == "fora de area", "lixo", "bom")) %>%
+  select(lixo, cluster_SISREG, SISREG_duplicado, cluster_SISREG2, SISREG_duplicado2, ID_SISREG, 
+         PACIENTE_ID, cluster_cadastros, perdido, match, NOME_PAC, 
+  NOME_UNIDADE, DATA_NASC.x, DATA_NASC.y, NOME_MAE.x, NOME_MAE.y, DATA_SOLICITACAO, cid10, 
+  MEDICO_SOLICITANTE, PROCEDIMENTO, ESF) %>%
+  arrange(NOME_PAC)
+
+summary(as.factor(cadsesisreg$SISREG_duplicado2)) # 2362 duplicados
+
+cadsesisreg <- cadsesisreg %>% 
+  mutate(lixo_revisto = ifelse(SISREG_duplicado2 == "virgem" | SISREG_duplicado2 == "simples", "fica",
+                               ifelse(SISREG_duplicado2 == "duplicado" & DATA_NASC.x == DATA_NASC.y 
+                                      & NOME_MAE.x == NOME_MAE.y,
+                               "fica", "sai"))) %>%
+  filter(lixo_revisto != "sai") %>%
+  select(ID_SISREG, PACIENTE_ID, cluster_cadastros, perdido, match, NOME_PAC, NOME_UNIDADE, 
+         DATA_NASC.x, DATA_NASC.y, NOME_MAE.x, NOME_MAE.y, DATA_SOLICITACAO, cid10,
+         MEDICO_SOLICITANTE, PROCEDIMENTO, ESF)
+
+
+cadsesisreg <- cadsesisreg[c(-1)]
+
+
+letra_M <- cadsesisreg[grep("^M", cadsesisreg$NOME_PAC),]
+
+write.table(letra_M, 
+            "C:\\Users\\Adelson\\Desktop\\pendrive\\DATABASES\\sisreg\\letra_M.csv", 
+            sep = ";", dec = ",", row.names = FALSE) # vários casos de pacientes com mais de um ID
+
+
+letra_L <- cadsesisreg[grep("^L", cadsesisreg$NOME_PAC),]
+
+write.table(letra_L, 
+            "C:\\Users\\Adelson\\Desktop\\pendrive\\DATABASES\\sisreg\\letra_L.csv", 
+            sep = ";", dec = ",", row.names = FALSE) # vários casos de pacientes com mais de um ID
+
+
+```
+
+
+
+
+```{r}
+write.table(cadsesisreg, 
+            "C:\\Users\\Adelson\\Desktop\\pendrive\\DATABASES\\sisreg\\cadsesisreg.csv", 
+            sep = ";", dec = ",", row.names = FALSE) # vários casos de pacientes com mais de um ID
+
+
+
+## Letra M para o Marcos
+
+letra_L <- cadsesisreg[grep("^L", cadsesisreg$NOME_PAC),]
+
+write.table(letra_L, 
+            "C:\\Users\\Adelson\\Desktop\\pendrive\\DATABASES\\sisreg\\letra_L.csv", 
+            sep = ";", dec = ",", row.names = FALSE) # vários casos de pacientes com mais de um ID
+
+
+a <- cadsesisreg %>% 
+  group_by(NOME_UNIDADE) %>% 
+  summarise(n = n(),
+            duplicados = sum(SISREG_duplicado == "duplicado")) %>%
+  mutate(perda = duplicados/(n+duplicados)*100)
+
+
+
+a <- cadastrados %>% filter(NOME_PAC == "MADALENA ALVES PESSOA")
+
+summary(as.factor(banco$SISREG_duplicado[banco$ESF != "fora de area"])) # 2362 duplicados
+
+sem <- banco %>% filter(ESF != "fora de area")
+
+sem <- within(sem, cluster_SISREG2 <- match(ID_SISREG, unique(ID_SISREG, na.rm=T)) - 1)
+
+sem$cluster_SISREG2[sem$cluster_SISREG2 == 0] <- NA
+
+sem <- sem %>% 
+  group_by(cluster_SISREG2) %>% 
+  mutate(SISREG_duplicado2 = ifelse(is.na(cluster_SISREG2), "virgem",
+                                     ifelse(n() > 1, "duplicado", "simples"))) %>% 
+  select(cluster_SISREG, SISREG_duplicado, cluster_SISREG2, SISREG_duplicado2, ID_SISREG, 
+         PACIENTE_ID, cluster_cadastros, perdido, match, NOME_PAC, 
+         NOME_UNIDADE, DATA_NASC.x, DATA_NASC.y, NOME_MAE.x, NOME_MAE.y, DATA_SOLICITACAO, cid10, 
+         MEDICO_SOLICITANTE, PROCEDIMENTO, ESF) %>%
+  arrange(SISREG_duplicado2, NOME_PAC)
+
+summary(as.factor(sem$SISREG_duplicado2)) # 4479 duplicados
+
+
+
+```
+
+
+
+
+
+```{r}
+
+load("C:\\Users\\Adelson\\Desktop\\pendrive\\roteiros\\novo_prime\\cids.RData")
+
+
+cids$NOME_PAC <- as.character(cids$NOME_PAC)
+cids$TIPO_ATENDIMENTO <- as.character(cids$TIPO_ATENDIMENTO)
+cids$NOME_UNIDADE <- stringr::str_sub(cids$NOME_UNIDADE, 1,
+                                             str_length(cids$NOME_UNIDADE)-8)
+
+cids <- cids %>% 
+  filter(NOME_UNIDADE == "SMS CMS NECKER PINTO" |
+            NOME_UNIDADE == "SMS CF ASSIS VALENTE" | 
+           NOME_UNIDADE == "SMS CF MARIA SEBASTIANA DE OLIVEIRA" | 
+           NOME_UNIDADE == "SMS CF WILMA COSTA" | 
+           NOME_UNIDADE == "SMS CMS MADRE TERESA DE CALCUTA" | 
+           NOME_UNIDADE == "SMS CMS NEWTON ALVES CARDOZO")
+
+### retomar aqui. vendo os duplicados que pertencem a fora de area ou que pertencem a mesma ESF.
+
+min(cids$DATA_CONSULTA[cids$TIPO_ATENDIMENTO == "Consulta Médica"], na.rm=T)
+
+
+180111
+
+ilha <- cids %>% 
+  filter(ESF == "3474" | ESF == "3477" | ESF == "3478" | ESF == "3479" | ESF == "3400" | 
+           ESF == "3429" | ESF == "3430" | ESF == "3432" | ESF == "3433" | ESF == "3423" | 
+           ESF == "3424" | ESF == "3425" | ESF == "3426" | ESF == "3427" | ESF == "3702" | 
+           ESF == "3703" | ESF == "3704" | ESF == "3717" | ESF == "3718" | ESF == "3719" | 
+           ESF == "3720" | ESF == "3721" | ESF == "3184" | ESF == "3186" | ESF == "3190" |
+           ESF == "3191" | ESF == "3452" | ESF == "3469" | ESF == "3480" | ESF == "3191" | 
+           ESF == "3474" | ESF == "3477" | ESF == "3478" | ESF == "3479" | ESF == "3400" | 
+           ESF == "3429" | ESF == "3430" | ESF == "3432" | ESF == "3433" | ESF == "3423" | 
+           ESF == "3424" | ESF == "3425" | ESF == "3426" | ESF == "3427" | ESF == "3702" | 
+           ESF == "3703" | ESF == "3704" | ESF == "3717" | ESF == "3718" | ESF == "3719" | 
+           ESF == "3720" | ESF == "3721" | ESF == "3184" | ESF == "3186" | ESF == "3190" | 
+           ESF == "3191" | ESF == "3452" | ESF == "3469" | ESF == "3480" | ESF == "3191")
+
+medicx <- ilha %>% filter(TIPO_ATENDIMENTO == "Consulta Médica")
+
+
+
+# 700.809 consultas
+# 409.226 consultas médicas
+# 244.875 por MFC
+# 164.351 por generalistas
+
+
+cadastrados <- cadastrados %>% 
+  filter(ESF == "3474" | ESF == "3477" | ESF == "3478" | ESF == "3479" | ESF == "3400" | 
+           ESF == "3429" | ESF == "3430" | ESF == "3432" | ESF == "3433" | ESF == "3423" | 
+           ESF == "3424" | ESF == "3425" | ESF == "3426" | ESF == "3427" | ESF == "3702" | 
+           ESF == "3703" | ESF == "3704" | ESF == "3717" | ESF == "3718" | ESF == "3719" | 
+           ESF == "3720" | ESF == "3721" | ESF == "3184" | ESF == "3186" | ESF == "3190" |
+           ESF == "3191" | ESF == "3452" | ESF == "3469" | ESF == "3480" | ESF == "3191" | 
+           ESF == "3474" | ESF == "3477" | ESF == "3478" | ESF == "3479" | ESF == "3400" | 
+           ESF == "3429" | ESF == "3430" | ESF == "3432" | ESF == "3433" | ESF == "3423" | 
+           ESF == "3424" | ESF == "3425" | ESF == "3426" | ESF == "3427" | ESF == "3702" | 
+           ESF == "3703" | ESF == "3704" | ESF == "3717" | ESF == "3718" | ESF == "3719" | 
+           ESF == "3720" | ESF == "3721" | ESF == "3184" | ESF == "3186" | ESF == "3190" | 
+           ESF == "3191" | ESF == "3452" | ESF == "3469" | ESF == "3480" | ESF == "3191") %>%
+  select(PACIENTE_ID, NOME_PAC, DATA_NASC, NOME_MAE, NOME_UNIDADE, ESF, cluster_cadastros) %>%
+  arrange(NOME_PAC)
+
+# 108.111 pacientes cadastrados apenas nestas equipes.
+
+```
+
+
+
+```{r}
+
+summary(mortes$BAIRES)
+
+tabela <- as.data.frame(table(mortes$BAIRES))
+
+CAP31 <- c('BANCARIO', 'BANCARIOS', 'BONSUCESSO', 'BRAS DE PINA', 'BRAZ DE PINA', 'CACUIA',
+           'CIDADE UNIVERSITARIA', 'COCOTA', 'COMPLEXO DA MARE', 'COMPLEXO DA MARÉ', 
+           'COMPLEXO DO ALEMAO', 'COMPLEXO DO ALEMÃO', 'COMPLEXO DO ALEMÇO', 'CORDOVIL',
+           'FREGUESIA- ILHA','FREGUESIA-ILHA','FREGUESIA - ILHA', 'FREGUESIA ILHA','GALEAO',
+           'GALEÃO','ILHA DO GOVERNADOR','ILHA DO GOVERNADOR','ILHA DO GOVERNADOR',
+           'JARDIM AMERICA','JARDIM GUANABARA', 'MAGUINHOS','MANGUINHOS','MONERO','OLARIA',
+           'PARADA DE LUCAS', 'PENHA','PENHA CIRCULAR','PITANGUEIRAS','PORTUGUESA',
+           'PRACA DA BANDEIRA','PRAÇA DA BANDEIRA','RAMOS','RIBEIRA','TAUA','TAUÁ',
+           'VIGARIO GERAL','VILA DA PENHA','ZUMBI')
+
+mortes31 <- mortes %>% filter(BAIRES %in% CAP31)
+
+```
+
